@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تم الدفع بنجاح — ARKAN AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;800&family=IBM+Plex+Sans+Arabic:wght@300;500;700&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07090E;--panel:#0D1118;--line:rgba(212,175,55,.18);--gold:#D4AF37;--gold-l:#EFD27A;--green:#10C07E;--txt:#E9ECF4;--muted:#8A93A6}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans Arabic',sans-serif;min-height:100vh;display:grid;place-items:center;padding:24px;line-height:1.8}
+.card{max-width:560px;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:44px 38px;text-align:center;box-shadow:0 30px 90px rgba(0,0,0,.5)}
+.check{width:74px;height:74px;border-radius:50%;background:rgba(16,192,126,.12);border:1.5px solid var(--green);display:grid;place-items:center;margin:0 auto 22px;font-size:32px;color:var(--green)}
+h1{font-family:'Alexandria';font-size:26px;font-weight:800;margin-bottom:10px}
+p{color:var(--muted);font-size:14.5px}
+.mono{font-family:'IBM Plex Mono',monospace}
+.box{margin:26px 0;background:#0A0F16;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:22px;text-align:right}
+.box h3{font-size:15px;margin-bottom:10px;color:var(--gold-l)}
+.btn{display:inline-flex;justify-content:center;width:100%;padding:14px;border-radius:11px;border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;transition:.25s}
+.btn-tg{background:#29A9E1;color:#fff;text-decoration:none}
+.btn-gold{background:linear-gradient(135deg,var(--gold-l),var(--gold));color:#100C02}
+input{width:100%;background:#070A10;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:13px 15px;color:var(--txt);font-family:'IBM Plex Mono';font-size:14px;margin:10px 0 14px;direction:ltr;text-align:left}
+input:focus{outline:none;border-color:var(--gold)}
+.hide{display:none}.ok{color:var(--green);font-weight:700}
+.spin{display:inline-block;width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:s .8s linear infinite;vertical-align:middle;margin-inline-start:8px}
+@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="check">✓</div>
+  <h1>تم تأكيد دفعتك!</h1>
+  <p>مرحبًا بك في ARKAN AI. رقم طلبك: <span class="mono" id="ord">…</span></p>
+
+  <div class="box">
+    <h3>① ادخل قناة الأعضاء الخاصة</h3>
+    <p style="font-size:13px;margin-bottom:14px">رابطك الخاص (صالح لاستخدام واحد فقط):</p>
+    <div id="inviteWrap"><p>جارٍ تجهيز رابطك <span class="spin"></span></p></div>
+  </div>
+
+  <div class="box">
+    <h3>② فعّل المؤشر على حسابك</h3>
+    <p style="font-size:13px">اكتب اسم المستخدم في TradingView (وليس البريد):</p>
+    <form id="tvForm">
+      <input id="tvUser" placeholder="TradingView username" required pattern="[A-Za-z0-9_\-\.]{3,30}">
+      <button class="btn btn-gold" type="submit">تفعيل وصولي للمؤشر</button>
+    </form>
+    <p id="tvDone" class="hide ok" style="margin-top:8px">✓ تم الاستلام — سيُفعَّل وصولك خلال دقائق وتصلك رسالة تأكيد في Telegram.</p>
+  </div>
+
+  <p style="font-size:12.5px">واجهت مشكلة؟ راسلنا: <a href="mailto:Mohamedarbi0208@gmail.com" style="color:var(--gold-l)">الدعم الفني</a></p>
+</div>
+
+<script>
+const API = "";
+const id = new URLSearchParams(location.search).get("id");
+async function poll(){
+  if(!id){document.getElementById('inviteWrap').innerHTML='<p style="color:#F0454C">رقم الطلب مفقود. تواصل مع الدعم.</p>';return}
+  try{
+    const r = await fetch(`${API}/api/order/${id}`); const d = await r.json();
+    if(d.status==="paid" && d.inviteLink){
+      document.getElementById('ord').textContent = d.orderId || id.toUpperCase();
+      document.getElementById('inviteWrap').innerHTML =
+        `<a class="btn btn-tg" href="${d.inviteLink}" target="_blank" rel="noopener">فتح القناة في Telegram ↗</a>`;
+      return;
+    }
+  }catch(e){}
+  setTimeout(poll, 2500);
+}
+poll();
+document.getElementById('tvForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const u = document.getElementById('tvUser').value.trim();
+  await fetch(`${API}/api/tradingview`, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id, username:u})});
+  e.target.classList.add('hide');
+  document.getElementById('tvDone').classList.remove('hide');
+});
+</script>
+</body>
+</html>
